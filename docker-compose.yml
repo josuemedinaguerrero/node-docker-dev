@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Servicio de la aplicación Node.js
+  app:
+    build: .
+    container_name: node_app
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: AB12cd34ef56
+      MYSQL_DATABASE: testdb
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - app_network
+
+  # Servicio de la base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: AB12cd34ef56
+      MYSQL_DATABASE: testdb
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-pAB12cd34ef56']
+      start_period: 10s
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+# Definir volúmenes para la persistencia de datos
+volumes:
+  mysql-data:
+
+# Definir red para comunicación entre contenedores
+networks:
+  app_network:
+    driver: bridge
